@@ -60,7 +60,9 @@ def _write(path: Path, title: str, sections: list[str]) -> None:
 
 
 def market(t: str, d: str) -> list[str]:
-    out = [_safe("검증된 시장 스냅샷 (정확한 가격·지표는 여기를 기준으로)",
+    note = ("> 주의: 분석 날짜가 오늘이라 마지막 행은 **장중 가격**일 수 있어요(장 마감 전이면 종가가 아님).\n"
+            if d == datetime.now().strftime("%Y-%m-%d") else "")
+    out = [note + _safe("검증된 시장 스냅샷 (정확한 가격·지표는 여기를 기준으로)",
                  T.get_verified_market_snapshot.func, t, d, 30, d),
            _safe("최근 6개월 일봉 (OHLCV)", T.get_stock_data.func, t, _days_back(d, 180), d, d)]
     for ind in INDICATORS:
@@ -106,7 +108,7 @@ def main() -> None:
     ap.add_argument("date", help="분석 날짜 YYYY-MM-DD (오늘 또는 과거)")
     ap.add_argument("outdir")
     ap.add_argument("--analysts", default=",".join(ALL_ANALYSTS))
-    ap.add_argument("--asset-type", default=None, choices=["stock", "crypto"])
+    ap.add_argument("--asset-type", default=None, choices=["stock", "crypto", "index"])
     a = ap.parse_args()
 
     try:
@@ -118,7 +120,8 @@ def main() -> None:
 
     ticker = normalize_symbol(a.ticker)
     safe_ticker_component(ticker)  # 경로에 쓸 수 없는 값이면 여기서 멈춘다
-    asset_type = a.asset_type or ("crypto" if "-USD" in ticker or ticker.endswith("USDT") else "stock")
+    asset_type = a.asset_type or ("index" if ticker.startswith("^") else
+                                  "crypto" if "-USD" in ticker or ticker.endswith("USDT") else "stock")
     picked = [x.strip() for x in a.analysts.split(",") if x.strip()]
     unknown = set(picked) - set(ALL_ANALYSTS)
     if unknown:
@@ -128,14 +131,25 @@ def main() -> None:
     out.mkdir(parents=True, exist_ok=True)
 
     identity = resolve_instrument_identity(ticker)
+    if identity.get("quote_type") == "INDEX":
+        asset_type = "index"
+    if asset_type == "index":  # 지수는 재무제표가 없다
+        picked = [x for x in picked if x != "fundamentals"]
+    context = build_instrument_context(ticker, "crypto" if asset_type == "crypto" else "stock", identity, a.date)
+    if asset_type == "index":
+        context += (" This is a market INDEX, not a company: analyze the market as a whole "
+                    "(breadth, sector leadership, foreign/institutional flows, rates, FX, macro). "
+                    "A rating here is a call on overall equity exposure to this market, e.g. via an index ETF.")
+    today = datetime.now().strftime("%Y-%m-%d")
     info = {
         "ticker": ticker,
         "input": a.ticker,
         "date": a.date,
         "asset_type": asset_type,
         "identity": identity,
-        "instrument_context": build_instrument_context(ticker, asset_type, identity, a.date),
+        "instrument_context": context,
         "analysts": picked,
+        "latest_bar_may_be_intraday": a.date == today,
         "fetched_at": datetime.now().isoformat(timespec="seconds"),
     }
     (out / "instrument.json").write_text(json.dumps(info, ensure_ascii=False, indent=2), encoding="utf-8")

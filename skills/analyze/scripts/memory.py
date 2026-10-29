@@ -54,7 +54,9 @@ def save(entries: list[dict]) -> None:
     tmp.replace(p)
 
 
-def benchmark_for(ticker: str) -> str:
+def benchmark_for(ticker: str) -> str | None:
+    if ticker.startswith("^"):  # 지수 자체를 판단한 경우: 초과수익 = 지수 수익률 (현금 대비)
+        return None
     if "." in ticker:
         suffix = "." + ticker.rsplit(".", 1)[1].upper()
         if suffix in BENCHMARKS:
@@ -111,13 +113,13 @@ def cmd_settle(a) -> None:
         bench = benchmark_for(e["ticker"])
         try:
             r = _window_return(e["ticker"], e["date"], a.holding)
-            b = _window_return(bench, e["date"], a.holding)
+            b = _window_return(bench, e["date"], a.holding) if bench else (None, None, 0.0)
         except Exception as exc:  # noqa: BLE001
             failed.append({"id": e["id"], "reason": str(exc)})
             continue
         if r is None or b is None:
             continue
-        e.update(status="settled", benchmark=bench, holding_days=a.holding, entry_date=r[0],
+        e.update(status="settled", benchmark=bench or "현금", holding_days=a.holding, entry_date=r[0],
                  exit_date=r[1], raw_return=round(r[2], 4), alpha=round(r[2] - b[2], 4))
         settled.append(e)
     save(entries)
