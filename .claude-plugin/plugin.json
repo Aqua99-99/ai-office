@@ -1,0 +1,17 @@
+{
+  "name": "trading-office",
+  "version": "0.1.0",
+  "description": "AI 직원 12명이 TradingAgents 방식으로 한국·미국 주식을 분석해 한국어 보고서와 5단계 등급을 내는 트레이딩 사무실. Claude 구독으로 돌아가요.",
+  "author": {
+    "name": "Aqua99-99"
+  },
+  "homepage": "https://github.com/Aqua99-99/ai-office",
+  "repository": "https://github.com/Aqua99-99/ai-office",
+  "keywords": [
+    "trading",
+    "stocks",
+    "multi-agent",
+    "tradingagents",
+    "korean"
+  ]
+}

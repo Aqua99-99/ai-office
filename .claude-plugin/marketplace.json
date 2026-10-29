@@ -1,0 +1,14 @@
+{
+  "name": "ai-office",
+  "owner": {
+    "name": "Aqua99-99"
+  },
+  "plugins": [
+    {
+      "name": "trading-office",
+      "source": "./",
+      "description": "AI 직원 12명의 주식 분석 트레이딩 사무실 (TradingAgents 방식, Claude 구독)"
+    }
+  ],
+  "description": "Aqua99-99의 AI 사무실 — 트레이딩 사무실 플러그인"
+}

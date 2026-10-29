@@ -1,0 +1,33 @@
+name: 분석 요청
+description: 트레이딩 사무실 직원들에게 종목 분석을 맡겨요
+title: "[분석요청] "
+body:
+  - type: input
+    id: tickers
+    attributes:
+      label: 종목
+      description: 쉼표로 여러 개 가능. 한국 이름도 돼요.
+      placeholder: 삼성전자, NVDA, 000660.KS
+    validations:
+      required: true
+  - type: input
+    id: date
+    attributes:
+      label: 분석 날짜
+      description: 비우면 오늘. 과거 날짜를 넣으면 그날 알 수 있던 정보만으로 분석해요.
+      placeholder: "2026-10-29"
+  - type: dropdown
+    id: rounds
+    attributes:
+      label: 토론 라운드
+      description: 많을수록 깊지만 Claude 사용량이 늘어요
+      options:
+        - "1"
+        - "2"
+        - "3"
+      default: 0
+  - type: input
+    id: holding
+    attributes:
+      label: 보유 현황
+      description: 선택. 예) 삼성전자 100주 평단 210000
